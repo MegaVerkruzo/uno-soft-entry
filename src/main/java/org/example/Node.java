@@ -41,14 +41,10 @@ public class Node {
     }
 
     public static Node getParent(Node node) {
-        Node parent;
         if (node.parent != null) {
-            parent = getParent(node.parent);
-        } else {
-            parent = node;
+            node.parent = getParent(node.parent);
         }
 
-        node.parent = parent;
         return node;
     }
 

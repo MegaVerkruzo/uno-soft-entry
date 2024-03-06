@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -127,10 +126,10 @@ public class Backend implements Runnable {
         for (int i = 0; i < input.size(); ++i) {
             String[] currentRow = input.get(i);
             for (int column = 0; column < currentRow.length; ++column) {
-                Objects.requireNonNull(anotherRepresentation.putIfAbsent(column, List.of()))
-                        .add(Node.NodeElement.createElement(
-                                currentRow[column].substring(1, currentRow[column].length() - 1), snm.get(i)
-                        ));
+                anotherRepresentation.putIfAbsent(column, new ArrayList<>());
+                anotherRepresentation.get(column).add(Node.NodeElement.createElement(
+                        currentRow[column].substring(1, currentRow[column].length() - 1), snm.get(i)
+                ));
             }
         }
         return anotherRepresentation;

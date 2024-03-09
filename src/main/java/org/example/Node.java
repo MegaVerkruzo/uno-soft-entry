@@ -16,7 +16,7 @@ public class Node {
     }
 
     public int getSize() {
-        return getParent(this).size;
+        return getParent().size;
     }
 
     public String getRow() {
@@ -24,8 +24,8 @@ public class Node {
     }
 
     public static void unionNodes(Node left, Node right) {
-        Node topLeft = getParent(left);
-        Node topRight = getParent(right);
+        Node topLeft = left.getParent();
+        Node topRight = right.getParent();
 
         if (topLeft.number == topRight.number) {
             return;
@@ -40,12 +40,13 @@ public class Node {
         }
     }
 
-    public static Node getParent(Node node) {
-        if (node.parent != null) {
-            node.parent = getParent(node.parent);
+    public Node getParent() {
+        if (parent != null) {
+            parent = parent.getParent();
+            return parent;
         }
 
-        return node;
+        return this;
     }
 
     public static Node createNode(String src, int number) {

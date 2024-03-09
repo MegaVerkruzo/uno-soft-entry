@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,7 +32,7 @@ public class Backend implements Runnable {
     @Override
     public void run() {
         final long start = System.currentTimeMillis();
-        final List<String[]> inputRows;
+        final Set<String> inputRows;
         try {
             inputRows = loadFile(inputFilePath);
         } catch (IOException e) {
@@ -58,38 +59,33 @@ public class Backend implements Runnable {
         return result.keySet().stream().filter(key -> key.size > 1).count();
     }
 
-    private static List<String[]> loadFile(Path filePath) throws IOException {
+    private static Set<String> loadFile(Path filePath) throws IOException {
         List<String> allLines = Files.readAllLines(filePath);
-        List<String[]> result = new ArrayList<>(allLines.size());
+        Set<String> result = new HashSet<>(allLines.size());
         for (String line : allLines) {
-            String[] row = line.split(";");
-            boolean isCorrectRow = true;
-            for (String columnWithSpaces : row) {
-                String column = columnWithSpaces.trim();
-                if (column.length() < 2
-                        || (column.charAt(0) != '"' || column.charAt(column.length() - 1) != '"')
-                        || column.substring(1, column.length() - 1).contains("\"")
-                ) {
-                    isCorrectRow = false;
-                    break;
-                }
-            }
+            List<String> row = Arrays.stream(line.split(";")).map(String::trim).toList();
+            boolean isCorrectRow = row
+                    .stream()
+                    .noneMatch(str -> str.length() < 2
+                            || (str.charAt(0) != '"' || str.charAt(str.length() - 1) != '"')
+                            || str.substring(1, str.length() - 1).contains("\"")
+                    );
 
             if (isCorrectRow) {
-                result.add(row);
+                result.add(String.join(";", row));
             }
         }
         return result;
     }
 
-    private static TreeMap<KeySizeParent, Set<String>> transformInputToResult(List<String[]> input) {
+    private static TreeMap<KeySizeParent, Set<String>> transformInputToResult(Set<String> input) {
         List<Node> dsu = getNodes(input);
         Map<Integer, List<Node.NodeElement>> anotherRepresentation = getColumnWordsMap(input, dsu);
         unionNodesByDSU(anotherRepresentation);
 
         TreeMap<KeySizeParent, Set<String>> resultGroup = new TreeMap<>(KeySizeParent.comparator);
         dsu.forEach(node -> {
-            KeySizeParent key = new KeySizeParent(node.getSize(), Node.getParent(node).getNumber());
+            KeySizeParent key = new KeySizeParent(node.getSize(), node.getParent().getNumber());
             resultGroup.putIfAbsent(key, new HashSet<>());
             resultGroup.get(key).add(node.getRow());
         });
@@ -113,32 +109,38 @@ public class Backend implements Runnable {
         }
     }
 
-    private static List<Node> getNodes(List<String[]> input) {
+    private static List<Node> getNodes(Set<String> input) {
         List<Node> snm = new ArrayList<>(input.size());
-        for (int i = 0; i < input.size(); ++i) {
-            snm.add(Node.createNode(String.join(";", input.get(i)), i));
+        int index = 0;
+        for (final String row : input) {
+            snm.add(Node.createNode(row, index++));
         }
         return snm;
     }
 
-    private static Map<Integer, List<Node.NodeElement>> getColumnWordsMap(List<String[]> input, List<Node> snm) {
+    private static Map<Integer, List<Node.NodeElement>> getColumnWordsMap(Set<String> input, List<Node> snm) {
         Map<Integer, List<Node.NodeElement>> anotherRepresentation = new HashMap<>();
-        for (int i = 0; i < input.size(); ++i) {
-            String[] currentRow = input.get(i);
-            for (int column = 0; column < currentRow.length; ++column) {
+        List<String[]> rows = input.stream().map(str -> str.split(";")).toList();
+        for (int i = 0; i < rows.size(); ++i) {
+            String[] row = rows.get(i);
+            for (int column = 0; column < row.length; ++column) {
+                if (row[column].substring(1, row[column].length() - 1).isBlank()) {
+                    continue;
+                }
                 anotherRepresentation.putIfAbsent(column, new ArrayList<>());
-                anotherRepresentation.get(column).add(Node.NodeElement.createElement(
-                        currentRow[column].substring(1, currentRow[column].length() - 1), snm.get(i)
-                ));
+                anotherRepresentation
+                        .get(column)
+                        .add(Node.NodeElement.createElement(row[column].substring(1, row[column].length() - 1), snm.get(i)));
             }
         }
         return anotherRepresentation;
     }
 
     private static void writeFile(Path filePath, TreeMap<KeySizeParent, Set<String>> result, long resultGroupsAmount) throws IOException {
+        Files.deleteIfExists(filePath);
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8,
-                StandardOpenOption.TRUNCATE_EXISTING,
                 StandardOpenOption.WRITE,
+                StandardOpenOption.TRUNCATE_EXISTING,
                 StandardOpenOption.CREATE_NEW
         )) {
             writer.write(resultGroupsAmount + "\n");

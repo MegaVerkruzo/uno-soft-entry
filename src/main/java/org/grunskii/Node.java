@@ -1,5 +1,8 @@
 package org.grunskii;
 
+/**
+ * Class which allows to use DSU (disjoing-set-union) structure of data
+ */
 public class Node {
     private final String row;
     private final int number;

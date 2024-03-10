@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 public class Backend implements Runnable {
+    private static final int MAX_COLUMNS_COUNT = 15;
     private final Path inputFilePath;
     private final Path outputFilePath;
 
@@ -120,7 +121,7 @@ public class Backend implements Runnable {
     }
 
     private static List<List<Node.NodeElement>> getColumnWordsMap(Set<String> input, List<Node> snm) {
-        List<List<Node.NodeElement>> anotherRepresentation = Collections.nCopies(15, new ArrayList<>());
+        List<List<Node.NodeElement>> anotherRepresentation = Collections.nCopies(MAX_COLUMNS_COUNT, new ArrayList<>());
         List<String[]> rows = input.stream().map(str -> str.split(";")).toList();
         for (int i = 0; i < rows.size(); ++i) {
             String[] row = rows.get(i);
@@ -136,7 +137,11 @@ public class Backend implements Runnable {
         return anotherRepresentation;
     }
 
-    private static void writeFile(Path filePath, TreeMap<KeySizeParent, Set<String>> result, long resultGroupsAmount) throws IOException {
+    private static void writeFile(
+            Path filePath,
+            TreeMap<KeySizeParent, Set<String>> result,
+            long resultGroupsAmount
+    ) throws IOException {
         Files.deleteIfExists(filePath);
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8,
                 StandardOpenOption.WRITE,

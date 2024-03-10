@@ -1,4 +1,4 @@
-package org.example;
+package org.grunskii;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

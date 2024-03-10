@@ -1,4 +1,4 @@
-import org.example.Main;
+import org.grunskii.Main;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -15,6 +15,8 @@ public class BackendTest {
     private static final String TEST_FILE_3 = "3.txt";
     private static final String TEST_FILE_4 = "4.txt";
     private static final String TEST_FILE_5 = "5.txt";
+    private static final String TEST_FILE_6 = "6.txt";
+    private static final String TEST_FILE_7 = "7.txt";
     private static final String OUTPUT_FILE = "output.txt";
 
     @AfterAll
@@ -47,7 +49,15 @@ public class BackendTest {
         checkTest(TEST_FILE_5);
     }
 
+    @Test
+    public void checkBasicTest() throws IOException {
+        checkTest(TEST_FILE_6);
+    }
 
+    @Test
+    public void checkSomeTest() throws IOException {
+        checkTest(TEST_FILE_7);
+    }
 
     private void checkTest(String fileName) throws IOException {
         Main.main(new String[]{INPUT_FOLDER + "/" + fileName});

@@ -1,4 +1,4 @@
-package org.example;
+package org.grunskii;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -80,7 +81,7 @@ public class Backend implements Runnable {
 
     private static TreeMap<KeySizeParent, Set<String>> transformInputToResult(Set<String> input) {
         List<Node> dsu = getNodes(input);
-        Map<Integer, List<Node.NodeElement>> anotherRepresentation = getColumnWordsMap(input, dsu);
+        List<List<Node.NodeElement>> anotherRepresentation = getColumnWordsMap(input, dsu);
         unionNodesByDSU(anotherRepresentation);
 
         TreeMap<KeySizeParent, Set<String>> resultGroup = new TreeMap<>(KeySizeParent.comparator);
@@ -92,10 +93,10 @@ public class Backend implements Runnable {
         return resultGroup;
     }
 
-    private static void unionNodesByDSU(Map<Integer, List<Node.NodeElement>> anotherRepresentation) {
-        for (Map.Entry<Integer, List<Node.NodeElement>> entry : anotherRepresentation.entrySet()) {
+    private static void unionNodesByDSU(List<List<Node.NodeElement>> anotherRepresentation) {
+        for (List<Node.NodeElement> entry : anotherRepresentation) {
             Map<String, Node.NodeElement> map = new HashMap<>();
-            for (final Node.NodeElement element : entry.getValue()) {
+            for (final Node.NodeElement element : entry) {
                 if (!map.containsKey(element.getData())) {
                     map.put(element.getData(), element);
                     continue;
@@ -118,8 +119,8 @@ public class Backend implements Runnable {
         return snm;
     }
 
-    private static Map<Integer, List<Node.NodeElement>> getColumnWordsMap(Set<String> input, List<Node> snm) {
-        Map<Integer, List<Node.NodeElement>> anotherRepresentation = new HashMap<>();
+    private static List<List<Node.NodeElement>> getColumnWordsMap(Set<String> input, List<Node> snm) {
+        List<List<Node.NodeElement>> anotherRepresentation = Collections.nCopies(15, new ArrayList<>());
         List<String[]> rows = input.stream().map(str -> str.split(";")).toList();
         for (int i = 0; i < rows.size(); ++i) {
             String[] row = rows.get(i);
@@ -127,10 +128,9 @@ public class Backend implements Runnable {
                 if (row[column].substring(1, row[column].length() - 1).isBlank()) {
                     continue;
                 }
-                anotherRepresentation.putIfAbsent(column, new ArrayList<>());
                 anotherRepresentation
                         .get(column)
-                        .add(Node.NodeElement.createElement(row[column].substring(1, row[column].length() - 1), snm.get(i)));
+                        .add(Node.NodeElement.createElement(row[column], snm.get(i)));
             }
         }
         return anotherRepresentation;
@@ -156,8 +156,8 @@ public class Backend implements Runnable {
     }
 
     private static void printMessageResults(long resultGroupsAmount, long startTime, long endTime) {
-        System.out.println("Groups with more than one " + resultGroupsAmount);
-        System.out.println("Time in millis is " + (endTime - startTime));
+        System.out.println("Groups with more than one row: " + resultGroupsAmount);
+        System.out.println("Time in millis: " + (endTime - startTime));
     }
 
     private record KeySizeParent(int size, int parentNumber) {

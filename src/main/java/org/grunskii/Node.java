@@ -1,4 +1,4 @@
-package org.example;
+package org.grunskii;
 
 public class Node {
     private final String row;

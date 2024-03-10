@@ -20,3 +20,13 @@ test {
 
     setWorkingDir('src/test/resources')
 }
+
+jar {
+    manifest {
+        attributes "Main-Class": "org.grunskii.Main"
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
